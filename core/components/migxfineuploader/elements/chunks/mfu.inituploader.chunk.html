@@ -1,0 +1,51 @@
+    <script>
+        var uploader = new qq.FineUploader({
+            element: document.getElementById("uploader"),
+            request: {
+                endpoint: '[[+connectorUrl]]',
+                params: {
+                    action: 'web/upload',
+                    uid: '[[+uid]]'
+                }                    
+            },
+            deleteFile: {
+                enabled: true,
+                forceConfirm: true,
+                endpoint: '[[+connectorUrl]]',
+                method: 'POST',
+                params: {
+                    action: 'web/delete',
+                    uid: '[[+uid]]'
+                }    
+            },
+            session: {
+                endpoint: '[[+connectorUrl]]',
+                params: {
+                    action: 'web/getfiles',
+                    uid: '[[+uid]]'
+                }                
+            },
+            callbacks: {
+                onComplete: function(id, name, response) {
+                    console.log(id);
+                    var uuid = response.uuid;
+                    var fileItem = this.getItemByFileId(id);
+                    if (response.success) {
+                        var input = qq(fileItem).getByClass("hidden-uuid")[0];
+                        input.setAttribute("value", uuid);
+                    }
+                },
+                onSessionRequestComplete: function(response, success) {
+                    var _this=this;
+                    if (response){
+                        qq.each(response,function(index,item){
+                            var fileItem = _this.getItemByFileId(index);
+                            var input = qq(fileItem).getByClass("hidden-uuid")[0];
+                            input.setAttribute("value", item.uuid);
+                        });
+                    }
+
+                }                
+            }                                    
+        })
+    </script>
