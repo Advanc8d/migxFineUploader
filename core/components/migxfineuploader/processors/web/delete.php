@@ -12,6 +12,8 @@
 
 $uid = htmlspecialchars(trim($modx->getOption('uid', $scriptProperties, false)));
 $uuid = htmlspecialchars(trim($modx->getOption('qquuid', $scriptProperties, false)));
+$_SESSION['migxfineuploader'][$uid . 'delete'][$uuid] = $uuid;
+
 $output = '';
 
 

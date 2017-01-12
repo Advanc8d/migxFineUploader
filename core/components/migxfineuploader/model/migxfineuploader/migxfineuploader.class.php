@@ -177,8 +177,8 @@ class MigxFineUploader {
 
         return true;
     }
-    
-    public function loadInitialItems(){
+
+    public function loadInitialItems() {
         $isPostBack = isset($_POST['hidSubmit']) && $_POST['hidSubmit'] == 'true' ? true : false;
         $isAjax = isset($_REQUEST['action']) ? true : false;
         $tvname = $this->getOption('tvname');
@@ -188,6 +188,7 @@ class MigxFineUploader {
             $resource_id = isset($_POST['np_doc_id']) ? $_POST['np_doc_id'] : 0;
             $resource_path = $this->getResourcePath($resource_id);
 
+            $_SESSION['migxfineuploader'][$this->config['uid'] . 'delete'] = array();
             $_SESSION['migxfineuploader'][$this->config['uid']] = array();
             if (!empty($resource_id) && $resource = $this->modx->getObject('modResource', $resource_id)) {
                 $items = $resource->getTVValue($tvname);
@@ -223,8 +224,8 @@ class MigxFineUploader {
                     $_SESSION['migxfineuploader'][$this->config['uid']][] = $item;
                 }
             }
-        } 
-        return true;       
+        }
+        return true;
     }
 
     /**
@@ -364,136 +365,6 @@ class MigxFineUploader {
         }
     }
 
-    /**
-     * Retreive already uploaded files.
-     *
-     * @access public
-     * @param array| $files Array of filenames (relative to $modx->getOption['assetsPath'])
-     * @return void
-     */
-    public function retrieveUploads($files = array()) {
-        foreach ($files as $file) {
-            $file = str_replace($this->modx->getOption('assets_url'), '', '/' . ltrim($file, '/'));
-            $pathinfo = pathinfo($file);
-            if (file_exists($this->modx->getOption('assets_path') . $file)) {
-                $fileInfo = array();
-
-                // Get original file info
-                $originalName = $pathinfo['basename'];
-                $originalExtension = $pathinfo['extension'];
-                $originalFilename = (isset($pathinfo['filename'])) ? $pathinfo['filename'] : substr($originalName, 0, strrpos($originalName, '.'));
-                $path = $this->modx->getOption('assets_path') . $pathinfo['dirname'] . '/';
-
-                // Prepare session file info
-                $fileInfo['originalName'] = $originalName;
-                $fileInfo['originalPath'] = $path;
-                $fileInfo['originalBaseUrl'] = $this->modx->getOption('assets_url');
-                $fileInfo['path'] = $this->config['cachePath'];
-                $fileInfo['base_url'] = $this->config['cacheUrl'];
-
-                // Check if file is already in session
-                $found = false;
-                foreach ($_SESSION['migxfineuploader'][$this->config['uid']] as $sessionInfo) {
-                    if ($sessionInfo['originalName'] === $fileInfo['originalName']) {
-                        $found = true;
-                        break;
-                    }
-                }
-
-                // create unique filename and set permissions
-                if (empty($fileInfo['uniqueName'])) {
-                    $fileInfo['uniqueName'] = md5($originalFilename . time()) . '.' . $originalExtension;
-                }
-                if (!@copy($fileInfo['originalPath'] . $fileInfo['originalName'], $fileInfo['path'] . $fileInfo['uniqueName'])) {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not copy the uploaded file to the upload cache.', '', 'MigxFineUploader');
-                }
-                ;
-                $filePerm = (int)$this->config['newFilePermissions'];
-                if (!@chmod($fileInfo['path'] . $fileInfo['uniqueName'], octdec($filePerm))) {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not change the uploaded file permission in the upload cache.', '', 'MigxFineUploader');
-                }
-                ;
-
-                // create thumbnail
-                $fileInfo['thumbName'] = $this->generateThumbnail($fileInfo);
-                if ($fileInfo['thumbName']) {
-                    // fill session
-                    if (!$found) {
-                        $_SESSION['migxfineuploader'][$this->config['uid']][] = $fileInfo;
-                    }
-                } else {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, 'Thumbnail generation: Original file not found.', '', 'MigxFineUploader');
-                    $this->debug[] = 'Thumbnail generation: Original file not found';
-                    @unlink($fileInfo['path'] . $fileInfo['uniqueName']);
-                }
-            } else {
-                // Check if not found file is in session and delete the unique file and the thumbnail
-                foreach ($_SESSION['migxfineuploader'][$this->config['uid']] as $sessionInfo) {
-                    if ($sessionInfo['originalName'] === $pathinfo['basename']) {
-                        @unlink($this->config['cachePath'] . $sessionInfo['uniqueName']);
-                        @unlink($this->config['cachePath'] . $sessionInfo['thumbName']);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Save the uploaded files to the specified target.
-     *
-     * @access public
-     * @param string $target Target path (relative to $modx->getOption['assets_path'])
-     * @return boolean|string
-     */
-    public function saveUploads($target, $clearQueue = false) {
-        $errors = false;
-        $target = rtrim($target, '/') . '/';
-        if (!file_exists($this->modx->getOption('assets_path') . $target)) {
-            $mode = octdec($this->modx->getOption('new_folder_permissions', null, 0777));
-            $this->rmkdir($this->modx->getOption('assets_path') . $target, $mode);
-        }
-        foreach ($_SESSION['migxfineuploader'][$this->config['uid']] as $fileId => &$fileInfo) {
-            if (file_exists($fileInfo['path'] . $fileInfo['uniqueName'])) {
-                if ($this->getOption('allowOverwrite')) {
-                    $pathinfo = pathinfo($fileInfo['originalName']);
-                    $i = '';
-                    while (file_exists($this->modx->getOption('assets_path') . $target . $pathinfo['filename'] . (($i) ? '_' . $i : '') . '.' . $pathinfo['extension'])) {
-                        $i = ($i == '') ? 1 : $i++;
-                    }
-                    $fileInfo['originalName'] = $pathinfo['filename'] . (($i) ? $i : '') . '.' . $pathinfo['extension'];
-                }
-                if (!@copy($fileInfo['path'] . $fileInfo['uniqueName'], $this->modx->getOption('assets_path') . $target . $fileInfo['originalName'])) {
-                    $errors = $this->modx->lexicon('migxfineuploader.targetNotWritable');
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, $errors, '', 'MigxFineUploader');
-                } else {
-                    $fileInfo['originalPath'] = $this->modx->getOption('assets_path') . $target;
-                    $fileInfo['originalBaseUrl'] = $this->modx->getOption('assets_url') . $target;
-                }
-                if ($clearQueue) {
-                    @unlink($fileInfo['path'] . $fileInfo['uniqueName']);
-                    @unlink($fileInfo['path'] . $fileInfo['thumbName']);
-                    unset($fileInfo[$fileId]);
-                }
-            }
-        }
-        return $errors;
-    }
-
-    /**
-     * Delete existing files in target that are deleted in $_SESSION.
-     *
-     * @access public
-     * @return void
-     */
-    public function deleteExisting() {
-        foreach ($_SESSION['migxfineuploader'][$this->config['uid'] . 'delete'] as &$fileInfo) {
-            if (isset($fileInfo['originalPath']) && file_exists($fileInfo['originalPath'] . $fileInfo['originalName'])) {
-                @unlink($fileInfo['originalPath'] . $fileInfo['originalName']);
-            }
-        }
-        $_SESSION['migxfineuploader'][$this->config['uid'] . 'delete'] = array();
-    }
 
     /**
      * Get the current uploads in specified format.
@@ -542,10 +413,22 @@ class MigxFineUploader {
     public function clearCache($hours = 4) {
         $cache = opendir($this->config['cachePath']);
         while (false !== ($file = readdir($cache))) {
-            $filelastmodified = filemtime($this->config['cachePath'] . $file);
-            if (((time() - $filelastmodified) > ($hours * 3600)) && is_file($this->config['cachePath'] . $file)) {
-                @unlink($this->config['cachePath'] . $file);
+            if (in_array($file,array('.','..'))){
+                continue;
             }
+            if (is_dir($this->config['cachePath'] . $file)) {
+                $filelastmodified = filemtime($this->config['cachePath'] . $file . '/.');
+                if (((time() - $filelastmodified) > ($hours * 3600))) {
+                    $this->removeDir($this->config['cachePath'] . $file . '/');
+                }
+            }
+            if (is_file($this->config['cachePath'] . $file)) {
+                $filelastmodified = filemtime($this->config['cachePath'] . $file);
+                if (((time() - $filelastmodified) > ($hours * 3600))) {
+                    @unlink($this->config['cachePath'] . $file);
+                }
+            }
+
         }
         closedir($cache);
     }
@@ -557,7 +440,7 @@ class MigxFineUploader {
      * @return string The output
      */
     public function output() {
-        
+
         $this->loadInitialItems();
 
         $assetsUrl = $this->getOption('assetsUrl');
@@ -621,12 +504,21 @@ class MigxFineUploader {
     }
 
     public function OnDocFormSave(&$resource) {
+        $resource_path = $this->getResourcePath($resource->get('id'));
+
         if (isset($_POST['mfu_tvnames'])) {
             $tvnames = is_array($_POST['mfu_tvnames']) ? $_POST['mfu_tvnames'] : array($_POST['mfu_tvnames']);
             foreach ($tvnames as $tvname) {
                 if (isset($_POST[$tvname . '_uid'])) {
                     $uid = $_POST[$tvname . '_uid'];
                     $items = array();
+                    //remove deleted files
+                    if (is_array($_SESSION["migxfineuploader"][$uid . 'delete'])) {
+                        foreach ($_SESSION["migxfineuploader"][$uid . 'delete'] as $uuid) {
+                            $this->removeDir($resource_path . $uuid . DIRECTORY_SEPARATOR);
+                        }
+                    }
+                    //collect items from Session
                     if (is_array($_SESSION["migxfineuploader"][$uid])) {
                         foreach ($_SESSION["migxfineuploader"][$uid] as $item) {
                             if (isset($item['uuid'])) {
@@ -634,13 +526,11 @@ class MigxFineUploader {
                             }
                         }
                     }
+                    //store ordered items into MIGX-TV and move uploaded files
                     $migx_items = array();
                     if (isset($_POST[$tvname . '_uuid'])) {
                         $uuids = is_array($_POST[$tvname . '_uuid']) ? $_POST[$tvname . '_uuid'] : array($_POST[$tvname . '_uuid']);
                         $migx_id_max = 0;
-                        if (count($uuids) > 0) {
-                            $resource_path = $this->getResourcePath($resource->get('id'), true);
-                        }
                         foreach ($uuids as $uuid) {
                             if (isset($items[$uuid])) {
                                 $source = $items[$uuid]['path'] . $items[$uuid]['originalName'];
@@ -694,5 +584,24 @@ class MigxFineUploader {
             return false;
         }
         return @mkdir($strPath);
+    }
+
+    /**
+     * Removes a directory and all files contained inside
+     * @param string $dir
+     */
+    protected function removeDir($dir) {
+        foreach (scandir($dir) as $item) {
+            if ($item == "." || $item == "..")
+                continue;
+
+            if (is_dir($item)) {
+                $this->removeDir($item);
+            } else {
+                unlink(join(DIRECTORY_SEPARATOR, array($dir, $item)));
+            }
+
+        }
+        rmdir($dir);
     }
 }
