@@ -19,7 +19,9 @@ Install the transport-package with package-manager of MODX Revolution
 Get it Working
 --------------------------------------------------------------------------------
 Create a dynamic resource-specific mediasource with basePath and baseUrl of
-`[[!migxResourceMediaPath? &createFolder=`1` &pathTpl=`assets/resourceimages/{id}/`]]`
+```
+[[!migxResourceMediaPath? &createFolder=`1` &pathTpl=`assets/resourceimages/{id}/`]]
+```
 remember the id fo this mediasource
 
 Go to the MIGX - CMP to the tab 'MIGX'
