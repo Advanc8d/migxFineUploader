@@ -193,9 +193,30 @@ class MigxFineUploader {
             if (!empty($resource_id) && $resource = $this->modx->getObject('modResource', $resource_id)) {
                 $items = $resource->getTVValue($tvname);
                 $items = json_decode($items, true);
-
+                $new_items = array();
+                $resave_tv = false;
                 foreach ($items as $item) {
+                    $new_item = $item;
+                    $image = array_reverse(explode(DIRECTORY_SEPARATOR, $item['image']));
+                    $item['image'] = $image[0];
+                    if (count($image) > 1) {
+                        $item['uuid'] = $image[1];
+                    } else {
+                        //uploaded from manager without uuid-path?
+                        $item['uuid'] = $this->generate_uuid();
+                        $path = $resource_path;
+                        $source = $path . $item['image'];
+                        if (file_exists($file)) {
+                            $target = $path . $item['uuid'] . DIRECTORY_SEPARATOR . $item['image'];
+                            $this->rmkdir($path . $item['uuid'] . DIRECTORY_SEPARATOR);
+                            rename($source, $target);
+                        }
+                        $resave_tv = true;
+                    }
+
                     $uuid = $item['uuid'];
+                    $new_item['image'] = $item['uuid'] . DIRECTORY_SEPARATOR . $item['image'];
+                    $new_items[] = $new_item;
                     $fileInfo = array();
 
                     $fileInfo['originalName'] = $item['image'];
@@ -214,6 +235,7 @@ class MigxFineUploader {
                             $item['size'] = filesize($file);
                             $source = $path . $uuid . DIRECTORY_SEPARATOR . $item['thumbName'];
                             $target = $this->config['cachePath'] . $uuid . DIRECTORY_SEPARATOR . $item['thumbName'];
+                            $this->rmkdir($this->config['cachePath'] . $uuid . DIRECTORY_SEPARATOR);
                             rename($source, $target);
                         }
                     }
@@ -223,20 +245,73 @@ class MigxFineUploader {
                     $item['originalName'] = $item['image'];
                     $_SESSION['migxfineuploader'][$this->config['uid']][] = $item;
                 }
+                if ($resave_tv) {
+                    $resource->setTVValue($tvname, json_encode($new_items));
+                }
             }
         }
         return true;
     }
 
     /**
-     * Gets resource-specific file-path
+     * Gets resource-specific file-path. Respects mediasource - path, if connected to the migx-TV.
      *
      * @access public
      * @param int $resource_id The id of the resource
      * @param bool $create Should the directory be created?
      */
     public function getResourcePath($resource_id, $create = false) {
+        $inputTVkey = 'image';
         $resourcePath = $this->modx->getOption('base_path') . $this->getOption('resourceBasePath') . $resource_id . DIRECTORY_SEPARATOR;
+        $migx = $this->modx->getService('migx', 'Migx', $this->modx->getOption('migx.core_path', null, $this->modx->getOption('core_path') . 'components/migx/') . 'model/migx/');
+        if (!($migx instanceof Migx)) {
+            
+        } else {
+            $resource = $this->modx->getObject('modResource', $resource_id);
+            $migx->working_context = $resource ? $resource->get('context_key') : 'web';
+            $tvname = $this->getOption('tvname');
+            if ($tv = $this->modx->getObject('modTemplateVar', array('name' => $tvname))) {
+
+                /*
+                *   get inputProperties
+                */
+
+                $properties = $tv->get('input_properties');
+                $properties = isset($properties['formtabs']) ? $properties : $tv->getProperties();
+
+                $migx->config['configs'] = $this->modx->getOption('configs', $properties, '');
+                if (!empty($migx->config['configs'])) {
+                    $migx->loadConfigs();
+                    // get tabs from file or migx-config-table
+                    $formtabs = $migx->getTabs();
+                }
+                if (empty($formtabs) && isset($properties['formtabs'])) {
+                    //try to get formtabs and its fields from properties
+                    $formtabs = $this->modx->fromJSON($properties['formtabs']);
+                }
+
+                /*
+                *   get inputTvs 
+                */
+                $inputTvs = array();
+                if (is_array($formtabs)) {
+                    $inputTvs = $migx->extractInputTvs($formtabs);
+                }
+                if ($migx->source = $tv->getSource($migx->working_context, false)) {
+                    $migx->source->initialize();
+                }
+
+                $inputTV = $inputTvs[$inputTVkey];
+                $tmp_tv = $this->modx->newObject('modTemplateVar');
+                $this->modx->setPlaceholder('mediasource_docid',$resource_id);
+                if ($mediasource = $migx->getFieldSource($inputTV, $tmp_tv)) {
+                    $mediasource->initialize();
+                    $resourcePath = $mediasource->getBasePath();
+                }
+
+            }
+        }
+
         if ($create) {
             $this->rmkdir($resourcePath);
         }
@@ -413,7 +488,7 @@ class MigxFineUploader {
     public function clearCache($hours = 4) {
         $cache = opendir($this->config['cachePath']);
         while (false !== ($file = readdir($cache))) {
-            if (in_array($file,array('.','..'))){
+            if (in_array($file, array('.', '..'))) {
                 continue;
             }
             if (is_dir($this->config['cachePath'] . $file)) {
@@ -452,6 +527,11 @@ class MigxFineUploader {
         if ($this->config['addJquery']) {
             $this->modx->regClientScript('http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js');
         }
+        if ($this->config['addUikit']) {
+            $this->modx->regClientScript('https://cdnjs.cloudflare.com/ajax/libs/uikit/2.27.2/js/uikit.min.js');
+            $this->modx->regClientScript('https://cdnjs.cloudflare.com/ajax/libs/uikit/2.27.2/js/components/sortable.min.js');
+            
+        }        
         if ($this->config['addCss']) {
             if ($this->getOption('debug') && ($assetsUrl != MODX_ASSETS_URL . 'components/' . $this->namespace . '/')) {
                 $this->modx->regClientCSS($cssSourceUrl . 'fine-uploader.css');
@@ -459,6 +539,9 @@ class MigxFineUploader {
                 $this->modx->regClientCSS($cssUrl . 'fine-uploader-new.min.css');
             }
         }
+        if ($this->config['addUikitCss']) {
+            $this->modx->regClientCSS('https://cdnjs.cloudflare.com/ajax/libs/uikit/2.27.2/css/uikit.min.css');
+        }        
         if ($this->config['addJscript']) {
             if ($this->getOption('debug') && ($assetsUrl != MODX_ASSETS_URL . 'components/' . $this->namespace . '/')) {
                 $this->modx->regClientScript($jsSourceUrl . 'fine-uploader.js');
@@ -551,8 +634,8 @@ class MigxFineUploader {
                                     if ($item['MIGX_id'] > $migx_id_max) {
                                         $migx_id_max = $item['MIGX_id'];
                                     }
-                                    $item['uuid'] = $uuid;
-                                    $item['image'] = $items[$uuid]['originalName'];
+                                    //$item['uuid'] = $uuid;
+                                    $item['image'] = $uuid . DIRECTORY_SEPARATOR . $items[$uuid]['originalName'];
                                     $migx_items[] = $item;
                                 }
 
@@ -566,6 +649,18 @@ class MigxFineUploader {
 
         }
         return '';
+    }
+
+    public function generate_uuid() {
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', // 32 bits for "time_low"
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), // 16 bits for "time_mid"
+            mt_rand(0, 0xffff), // 16 bits for "time_hi_and_version",
+            // four most significant bits holds version number 4
+        mt_rand(0, 0x0fff) | 0x4000, // 16 bits, 8 bits for "clk_seq_hi_res",
+            // 8 bits for "clk_seq_low",
+        // two most significant bits holds zero and one for variant DCE1.1
+        mt_rand(0, 0x3fff) | 0x8000, // 48 bits for "node"
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
     }
 
     /**

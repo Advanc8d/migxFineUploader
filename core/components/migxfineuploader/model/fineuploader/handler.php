@@ -256,7 +256,7 @@ class UploadHandler {
      * @param string $uploadDirectory Target directory
      * @param string $filename The name of the file to use.
      */
-    protected function getUniqueTargetPath($uploadDirectory, $filename)
+    protected function getUniqueTargetPath($uploadDirectory, $filename, $withDirectory = true)
     {
         // Allow only one process at the time to get a unique file name, otherwise
         // if multiple people would upload a file with the same name at the same time
@@ -282,10 +282,10 @@ class UploadHandler {
             $unique = $base.'-'.$suffix;
         }
 
-        $result =  $uploadDirectory . DIRECTORY_SEPARATOR . $unique . $ext;
+        $result = $withDirectory ? $uploadDirectory . DIRECTORY_SEPARATOR . $unique . $ext : $unique . $ext;
 
         // Create an empty target file
-        if (!touch($result)){
+        if (!touch($uploadDirectory . DIRECTORY_SEPARATOR . $unique . $ext)){
             // Failed
             $result = false;
         }

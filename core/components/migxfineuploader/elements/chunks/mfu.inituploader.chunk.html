@@ -1,4 +1,5 @@
     <script>
+    
         var uploader = new qq.FineUploader({
             element: document.getElementById("uploader"),
             request: {
@@ -43,6 +44,7 @@
                             var input = qq(fileItem).getByClass("hidden-uuid")[0];
                             input.setAttribute("value", item.uuid);
                         });
+                        
                     }
 
                 }                

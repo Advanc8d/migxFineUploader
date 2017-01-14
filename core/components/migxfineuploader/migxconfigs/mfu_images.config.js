@@ -20,30 +20,22 @@
           "restrictive_condition":"",
           "display":"",
           "sourceFrom":"config",
-          "sources":"",
+          "sources":[
+            {
+              "MIGX_id":1,
+              "context":"web",
+              "sourceid":3
+            },
+            {
+              "MIGX_id":2,
+              "context":"mgr",
+              "sourceid":3
+            }
+          ],
           "inputOptionValues":"",
           "default":"",
           "useDefaultIfEmpty":"0",
           "pos":1
-        },
-        {
-          "MIGX_id":5,
-          "field":"uuid",
-          "caption":"uuid",
-          "description":"",
-          "description_is_code":"0",
-          "inputTV":"",
-          "inputTVtype":"",
-          "validation":"",
-          "configs":"",
-          "restrictive_condition":"",
-          "display":"",
-          "sourceFrom":"config",
-          "sources":"",
-          "inputOptionValues":"",
-          "default":"",
-          "useDefaultIfEmpty":"0",
-          "pos":2
         }
       ],
       "pos":1
@@ -88,7 +80,9 @@
     "has_jointable":"yes",
     "getlistwhere":"",
     "joins":"",
-    "hooksnippets":"",
+    "hooksnippets":{
+      "mfugetproperties":"mfuUploaderGetProperties"
+    },
     "cmpmaincaption":"",
     "cmptabcaption":"",
     "cmptabdescription":"",
@@ -106,22 +100,7 @@
       "sortable":"false",
       "show_in_grid":1,
       "customrenderer":"",
-      "renderer":"",
-      "clickaction":"",
-      "selectorconfig":"",
-      "renderchunktpl":"",
-      "renderoptions":"",
-      "editor":""
-    },
-    {
-      "MIGX_id":2,
-      "header":"uuid",
-      "dataIndex":"uuid",
-      "width":"",
-      "sortable":"false",
-      "show_in_grid":1,
-      "customrenderer":"",
-      "renderer":"",
+      "renderer":"this.renderImage",
       "clickaction":"",
       "selectorconfig":"",
       "renderchunktpl":"",
@@ -132,7 +111,7 @@
   "createdby":1,
   "createdon":"2017-01-11 20:14:15",
   "editedby":1,
-  "editedon":"2017-01-11 21:19:27",
+  "editedon":"2017-01-14 11:35:43",
   "deleted":0,
   "deletedon":null,
   "deletedby":0,
