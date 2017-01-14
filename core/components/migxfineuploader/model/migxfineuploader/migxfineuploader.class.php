@@ -161,6 +161,8 @@ class MigxFineUploader {
                 'addJquery' => (bool)$this->modx->getOption('addJquery', $properties, false),
                 'addJscript' => $this->modx->getOption('addJscript', $properties, true),
                 'addCss' => $this->modx->getOption('addCss', $properties, true),
+                'tplUiTemplate' => $this->modx->getOption('tplUiTemplate', $properties, ''),
+                'tplInitUploader' => $this->modx->getOption('tplInitUploader', $properties, ''),
                 'debug' => (bool)$this->getOption('debug', $properties, false));
             $this->config = array_merge($this->config, $config);
             $_SESSION['migxfineuploader'][$this->config['uid'] . 'config'] = $this->config;
@@ -172,7 +174,7 @@ class MigxFineUploader {
             ;
 
         }
-
+        
         $this->clearCache($this->config['cacheExpires']);
 
         return true;
@@ -262,12 +264,11 @@ class MigxFineUploader {
      */
     public function getResourcePath($resource_id, $create = false) {
         $inputTVkey = 'image';
+        $resource = $this->modx->getObject('modResource', $resource_id);
         $resourcePath = $this->modx->getOption('base_path') . $this->getOption('resourceBasePath') . $resource_id . DIRECTORY_SEPARATOR;
+        
         $migx = $this->modx->getService('migx', 'Migx', $this->modx->getOption('migx.core_path', null, $this->modx->getOption('core_path') . 'components/migx/') . 'model/migx/');
-        if (!($migx instanceof Migx)) {
-            
-        } else {
-            $resource = $this->modx->getObject('modResource', $resource_id);
+        if ($migx instanceof Migx) {
             $migx->working_context = $resource ? $resource->get('context_key') : 'web';
             $tvname = $this->getOption('tvname');
             if ($tv = $this->modx->getObject('modTemplateVar', array('name' => $tvname))) {
@@ -565,8 +566,8 @@ class MigxFineUploader {
         //$this->modx->smarty->assign('items', $itemList);
         //return $this->modx->smarty->fetch($this->config['templatesPath'] . 'web/uploadSection.tpl');
 
-        $this->modx->regClientScript($this->getChunk('mfu.migx.template', $this->config));
-        $this->modx->regClientScript($this->getChunk('mfu.inituploader', $this->config));
+        $this->modx->regClientScript($this->getChunk($this->getOption('tplUiTemplate'), $this->config));
+        $this->modx->regClientScript($this->getChunk($this->getOption('tplInitUploader'), $this->config));
 
         $output = '<div id="uploader"></div>';
         return $output;
