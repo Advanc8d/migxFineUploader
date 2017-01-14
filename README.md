@@ -13,6 +13,7 @@ MIGX and newsPublisher has to be installed, before you can use migxFineUploader
 Installation
 --------------------------------------------------------------------------------
 Install MIGX and newsPublisher
+
 Install the transport-package with package-manager of MODX Revolution
 
 
