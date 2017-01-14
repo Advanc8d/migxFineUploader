@@ -38,6 +38,7 @@ Create a new MIGX-TV for your template.
 Name it 'images'
 Put into the input-options 'configs' the name of your MIGX-config: 'images'
 
+Add the images - TV to your NewsPublisher - snippet-call
 
 Newspublisher - Example:
 ```
@@ -45,3 +46,9 @@ Newspublisher - Example:
 &show=`pagetitle,longtitle,content,images`
 ]]
 ```
+
+Now. you should be able to upload images with NewsPublisher to your MIGX-TV, reorder them with drag/drop and delete them.
+
+Customization
+--------------------------------------------------------------------------------
+
