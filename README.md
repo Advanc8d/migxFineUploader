@@ -51,4 +51,42 @@ Now. you should be able to upload images with NewsPublisher to your MIGX-TV, reo
 
 Customization
 --------------------------------------------------------------------------------
+If you need your own set of fileUploader - options, for example changing the maxFiles or allowedExtenstions,
+Edit the MIGX - config and change the snippet-name under 'Hook - Snippets' under the tab MIGXdb - Settings.
+change the value for:
+```
+{"mfugetproperties":"mfuUploaderGetProperties"}
+```
+and create a copy of the snippet 'mfuUploaderGetProperties' with your modified options.
+
+If you need more customization, you can create your own UI - template by creating a chunk with the name in this section:
+```
+$prop['tplUiTemplate'] = 'mfu.migx.template';
+```
+you can of course also change the name of that chunk within your customized getproperties - snippet
+
+To change the initialization of FineUploader completely to your needs, create a snippet with the name, found in this section:
+```
+$prop['tplInitUploader'] = 'mfu.inituploader';
+```
+you can find the default code for both chunks in this files:
+https://github.com/Bruno17/migxFineUploader/blob/master/core/components/migxfineuploader/elements/chunks/mfu.migx.template.chunk.html
+https://github.com/Bruno17/migxFineUploader/blob/master/core/components/migxfineuploader/elements/chunks/mfu.inituploader.chunk.html
+
+Read more about FineUploader here:
+http://fineuploader.com/
+
+and about uikit, which is used for drag/drop - sorting of items and maybe more in the future:
+https://getuikit.com/v2/docs/documentation_get-started.html
+
+
+
+
+
+
+
+
+
+
+
 
