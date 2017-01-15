@@ -1,14 +1,14 @@
 # migxFineUploader
-MODX Revolution Multifile - Uploader for Newspublisher. Uploads images to a MIGX-TV from frontend, based on FineUploader
+MODX Revolution Multifile - Uploader for NewsPublisher. Uploads images to a MIGX-TV from frontend, based on FineUploader
 
 Features
 --------------------------------------------------------------------------------
-migxFineUploader lets you upload one or multiple files from Frontpage with newsPublisher into a MIGX-TV.
+migxFineUploader lets you upload one or multiple files from Frontpage with NewsPublisher into a MIGX-TV.
 You can use drag/drop to change the sortorder of the uploaded items. 
 
 Requirements
 --------------------------------------------------------------------------------
-MIGX and newsPublisher has to be installed, before you can use migxFineUploader
+MIGX and NewsPublisher has to be installed, before you can use migxFineUploader
 
 Installation
 --------------------------------------------------------------------------------
