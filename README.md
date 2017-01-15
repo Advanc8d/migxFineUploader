@@ -66,7 +66,7 @@ $prop['tplUiTemplate'] = 'mfu.migx.template';
 ```
 you can of course also change the name of that chunk within your customized getproperties - snippet
 
-To change the initialization of FineUploader completely to your needs, create a snippet with the name, found in this section:
+To change the initialization of FineUploader completely to your needs, create a chunk with the name, found in this section:
 ```
 $prop['tplInitUploader'] = 'mfu.inituploader';
 ```
