@@ -19,27 +19,27 @@ Install the transport-package with package-manager of MODX Revolution
 
 Get it Working
 --------------------------------------------------------------------------------
-Create a dynamic resource-specific mediasource with basePath and baseUrl of
+- Create a dynamic resource-specific mediasource with basePath and baseUrl of
 ```
 [[!migxResourceMediaPath? &createFolder=`1` &pathTpl=`assets/resourceimages/{id}/`]]
 ```
-remember the id fo this mediasource
+- remember the id fo this mediasource
 
-Go to the MIGX - CMP to the tab 'MIGX'
-Click the button 'Import from package'
-package is 'migxfineuploader'
-This imports a new MIGX-config with name 'mfu_images'
-right-click that item in the grid and 'edit' this config
-Go to the tab formtabs -> Edit the tab 'image' -> Edit the field 'image'
-Go to the tab 'Mediasources' and change the 'Source ID' for both contexts (mgr and web) to the id of the mediasource, you have created before
-If you have another context, add this context to the list.
-Save everything.
+- Go to the MIGX - CMP to the tab 'MIGX'
+- Click the button 'Import from package'
+- package is 'migxfineuploader'
+- This imports a new MIGX-config with name 'mfu_images'
+- right-click that item in the grid and 'edit' this config
+- Go to the tab formtabs -> Edit the tab 'image' -> Edit the field 'image'
+- Go to the tab 'Mediasources' and change the 'Source ID' for both contexts (mgr and web) to the id of the mediasource, you have created before
+- If you have another context, add this context to the list.
+- Save everything.
 
-Create a new MIGX-TV for your template.
-Name it 'images'
-Put into the input-options 'configs' the name of your MIGX-config: 'images'
+- Create a new MIGX-TV for your template.
+- Name it 'images'
+- Put into the input-options 'configs' the name of your MIGX-config: 'images'
 
-Add the images - TV to your NewsPublisher - snippet-call
+- Add the images - TV to your NewsPublisher - snippet-call
 
 Newspublisher - Example:
 ```
@@ -54,7 +54,8 @@ Customization
 --------------------------------------------------------------------------------
 If you need your own set of fileUploader - options, for example changing the maxFiles or allowedExtenstions,
 Edit the MIGX - config and change the snippet-name under 'Hook - Snippets' under the tab MIGXdb - Settings.
-change the value for:
+
+Change the value for:
 ```
 {"mfugetproperties":"mfuUploaderGetProperties"}
 ```
